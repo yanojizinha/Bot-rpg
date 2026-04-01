@@ -48,56 +48,110 @@ module.exports = {
     )
 
     .addStringOption((option) =>
-      option.setName('nome').setDescription('Nome').setRequired(true).setMaxLength(100)
+      option
+        .setName('nome')
+        .setDescription('Nome do personagem')
+        .setRequired(true)
+        .setMaxLength(100)
     )
-    .addStringOption((option) =>
-      option.setName('sobrenome').setDescription('Sobrenome').setRequired(false).setMaxLength(100)
-    )
-    .addIntegerOption((option) =>
-      option.setName('idade').setDescription('Idade').setRequired(false).setMinValue(0).setMaxValue(999)
-    )
-    .addStringOption((option) =>
-      option.setName('raca').setDescription('Raça').setRequired(false).setMaxLength(100)
-    )
-    .addStringOption((option) =>
-      option.setName('familia').setDescription('Família').setRequired(false).setMaxLength(100)
-    )
-    .addStringOption((option) =>
-      option.setName('cla').setDescription('Clã').setRequired(false).setMaxLength(100)
-    )
-    .addStringOption((option) =>
-      option.setName('genero').setDescription('Gênero').setRequired(false).setMaxLength(100)
-    )
-    .addStringOption((option) =>
-      option.setName('classe').setDescription('Classe').setRequired(false).setMaxLength(100)
-    )
-    .addStringOption((option) =>
-      option.setName('rank').setDescription('Rank').setRequired(false).setMaxLength(100)
-    )
-    .addStringOption((option) =>
-      option.setName('origem').setDescription('Origem').setRequired(false).setMaxLength(1000)
-    )
+
     .addStringOption((option) =>
       option
-        .setName('personalidade')
-        .setDescription('Personalidade')
+        .setName('sobrenome')
+        .setDescription('Sobrenome do personagem')
+        .setRequired(false)
+        .setMaxLength(100)
+    )
+
+    .addIntegerOption((option) =>
+      option
+        .setName('idade')
+        .setDescription('Idade do personagem')
+        .setRequired(false)
+        .setMinValue(0)
+        .setMaxValue(999)
+    )
+
+    .addStringOption((option) =>
+      option
+        .setName('raca')
+        .setDescription('Raça do personagem')
+        .setRequired(false)
+        .setMaxLength(100)
+    )
+
+    .addStringOption((option) =>
+      option
+        .setName('familia')
+        .setDescription('Família do personagem')
+        .setRequired(false)
+        .setMaxLength(100)
+    )
+
+    .addStringOption((option) =>
+      option
+        .setName('cla')
+        .setDescription('Clã do personagem')
+        .setRequired(false)
+        .setMaxLength(100)
+    )
+
+    .addStringOption((option) =>
+      option
+        .setName('genero')
+        .setDescription('Gênero do personagem')
+        .setRequired(false)
+        .setMaxLength(100)
+    )
+
+    .addStringOption((option) =>
+      option
+        .setName('classe')
+        .setDescription('Classe do personagem')
+        .setRequired(false)
+        .setMaxLength(100)
+    )
+
+    .addStringOption((option) =>
+      option
+        .setName('rank')
+        .setDescription('Rank do personagem')
+        .setRequired(false)
+        .setMaxLength(100)
+    )
+
+    .addStringOption((option) =>
+      option
+        .setName('origem')
+        .setDescription('Origem do personagem')
         .setRequired(false)
         .setMaxLength(1000)
     )
+
+    .addStringOption((option) =>
+      option
+        .setName('personalidade')
+        .setDescription('Personalidade do personagem')
+        .setRequired(false)
+        .setMaxLength(1000)
+    )
+
     .addStringOption((option) =>
       option
         .setName('historia')
-        .setDescription('História')
+        .setDescription('História do personagem')
         .setRequired(false)
         .setMaxLength(4000)
     )
+
     .addStringOption((option) =>
       option
         .setName('habilidades')
-        .setDescription('Habilidades')
+        .setDescription('Habilidades do personagem')
         .setRequired(false)
         .setMaxLength(2000)
     )
+
     .addStringOption((option) =>
       option
         .setName('aparencia')
@@ -105,10 +159,11 @@ module.exports = {
         .setRequired(false)
         .setMaxLength(1000)
     )
+
     .addStringOption((option) =>
       option
         .setName('inventario')
-        .setDescription('Inventário inicial. Ex: Katana, 3 Poções, 2 Kunais')
+        .setDescription('Itens iniciais. Ex: Katana, 3 Poções, 2 Kunais')
         .setRequired(false)
         .setMaxLength(1000)
     ),
@@ -140,7 +195,14 @@ module.exports = {
       });
     }
 
-    const nome = interaction.options.getString('nome', true).trim();
+    const nome = interaction.options.getString('nome');
+    if (!nome?.trim()) {
+      return interaction.reply({
+        content: '❌ O comando `/criar-personagem` está desatualizado no Discord. Rode `npm run deploy` novamente.',
+        ephemeral: true
+      });
+    }
+
     const sobrenome = interaction.options.getString('sobrenome')?.trim() || '';
     const idade = interaction.options.getInteger('idade');
     const raca = interaction.options.getString('raca')?.trim() || '';
@@ -162,7 +224,7 @@ module.exports = {
       guildId: interaction.guildId,
       playerId: targetUser.id,
       createdBy: interaction.user.id,
-      nome,
+      nome: nome.trim(),
       sobrenome,
       idade,
       raca,
