@@ -8,10 +8,62 @@ const {
 } = require('discord.js');
 const { canManageCharacters } = require('../utils/permissions');
 
+function buildStep1Modal(sessionId) {
+  const modal = new ModalBuilder()
+    .setCustomId(`create-character:step1:${sessionId}`)
+    .setTitle('Criar personagem • 1/3');
+
+  const nomeInput = new TextInputBuilder()
+    .setCustomId('nome')
+    .setLabel('Nome')
+    .setStyle(TextInputStyle.Short)
+    .setRequired(true)
+    .setMaxLength(100);
+
+  const sobrenomeInput = new TextInputBuilder()
+    .setCustomId('sobrenome')
+    .setLabel('Sobrenome')
+    .setStyle(TextInputStyle.Short)
+    .setRequired(false)
+    .setMaxLength(100);
+
+  const idadeInput = new TextInputBuilder()
+    .setCustomId('idade')
+    .setLabel('Idade')
+    .setStyle(TextInputStyle.Short)
+    .setRequired(false)
+    .setPlaceholder('Ex: 19')
+    .setMaxLength(3);
+
+  const racaInput = new TextInputBuilder()
+    .setCustomId('raca')
+    .setLabel('Raça')
+    .setStyle(TextInputStyle.Short)
+    .setRequired(false)
+    .setMaxLength(100);
+
+  const familiaInput = new TextInputBuilder()
+    .setCustomId('familia')
+    .setLabel('Família')
+    .setStyle(TextInputStyle.Short)
+    .setRequired(false)
+    .setMaxLength(100);
+
+  modal.addComponents(
+    new ActionRowBuilder().addComponents(nomeInput),
+    new ActionRowBuilder().addComponents(sobrenomeInput),
+    new ActionRowBuilder().addComponents(idadeInput),
+    new ActionRowBuilder().addComponents(racaInput),
+    new ActionRowBuilder().addComponents(familiaInput)
+  );
+
+  return modal;
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('criar-personagem')
-    .setDescription('Cria uma nova ficha de personagem para um jogador')
+    .setDescription('Cria uma ficha completa de personagem para um jogador')
     .addUserOption((option) =>
       option
         .setName('jogador')
@@ -59,57 +111,10 @@ module.exports = {
       playerId: targetUser.id,
       createdBy: interaction.user.id,
       imageUrl: image?.url || '',
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      data: {}
     });
 
-    const modal = new ModalBuilder()
-      .setCustomId(`create-character:${sessionId}`)
-      .setTitle('Criar personagem');
-
-    const nomeInput = new TextInputBuilder()
-      .setCustomId('nome')
-      .setLabel('Nome')
-      .setStyle(TextInputStyle.Short)
-      .setRequired(true)
-      .setMaxLength(100);
-
-    const sobrenomeInput = new TextInputBuilder()
-      .setCustomId('sobrenome')
-      .setLabel('Sobrenome')
-      .setStyle(TextInputStyle.Short)
-      .setRequired(false)
-      .setMaxLength(100);
-
-    const idadeInput = new TextInputBuilder()
-      .setCustomId('idade')
-      .setLabel('Idade')
-      .setStyle(TextInputStyle.Short)
-      .setRequired(false)
-      .setPlaceholder('Ex: 19')
-      .setMaxLength(3);
-
-    const racaInput = new TextInputBuilder()
-      .setCustomId('raca')
-      .setLabel('Raça')
-      .setStyle(TextInputStyle.Short)
-      .setRequired(false)
-      .setMaxLength(100);
-
-    const familiaInput = new TextInputBuilder()
-      .setCustomId('familia')
-      .setLabel('Família')
-      .setStyle(TextInputStyle.Short)
-      .setRequired(false)
-      .setMaxLength(100);
-
-    modal.addComponents(
-      new ActionRowBuilder().addComponents(nomeInput),
-      new ActionRowBuilder().addComponents(sobrenomeInput),
-      new ActionRowBuilder().addComponents(idadeInput),
-      new ActionRowBuilder().addComponents(racaInput),
-      new ActionRowBuilder().addComponents(familiaInput)
-    );
-
-    return interaction.showModal(modal);
+    return interaction.showModal(buildStep1Modal(sessionId));
   }
 };
