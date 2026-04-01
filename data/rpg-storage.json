@@ -1,0 +1,9 @@
+json
+{
+  "version": 1,
+  "admins": [],
+  "characters": [],
+  "counters": {
+    "characterId": 1
+  }
+}
