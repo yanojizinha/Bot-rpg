@@ -1,80 +1,116 @@
-const crypto = require('node:crypto');
-const {
-  SlashCommandBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-  ActionRowBuilder
-} = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 const { canManageCharacters } = require('../utils/permissions');
+const { buildCharacterEmbed } = require('../utils/characterEmbed');
 
-function buildStep1Modal(sessionId) {
-  const modal = new ModalBuilder()
-    .setCustomId(`create-character:step1:${sessionId}`)
-    .setTitle('Criar personagem • 1/3');
+function parseInventory(raw) {
+  const text = String(raw || '').trim();
 
-  const nomeInput = new TextInputBuilder()
-    .setCustomId('nome')
-    .setLabel('Nome')
-    .setStyle(TextInputStyle.Short)
-    .setRequired(true)
-    .setMaxLength(100);
+  if (!text) return [];
 
-  const sobrenomeInput = new TextInputBuilder()
-    .setCustomId('sobrenome')
-    .setLabel('Sobrenome')
-    .setStyle(TextInputStyle.Short)
-    .setRequired(false)
-    .setMaxLength(100);
+  return text
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => {
+      const match = item.match(/^(\d+)\s+(.+)$/);
 
-  const idadeInput = new TextInputBuilder()
-    .setCustomId('idade')
-    .setLabel('Idade')
-    .setStyle(TextInputStyle.Short)
-    .setRequired(false)
-    .setPlaceholder('Ex: 19')
-    .setMaxLength(3);
+      if (match) {
+        return {
+          name: match[2].trim(),
+          quantity: Number(match[1])
+        };
+      }
 
-  const racaInput = new TextInputBuilder()
-    .setCustomId('raca')
-    .setLabel('Raça')
-    .setStyle(TextInputStyle.Short)
-    .setRequired(false)
-    .setMaxLength(100);
-
-  const familiaInput = new TextInputBuilder()
-    .setCustomId('familia')
-    .setLabel('Família')
-    .setStyle(TextInputStyle.Short)
-    .setRequired(false)
-    .setMaxLength(100);
-
-  modal.addComponents(
-    new ActionRowBuilder().addComponents(nomeInput),
-    new ActionRowBuilder().addComponents(sobrenomeInput),
-    new ActionRowBuilder().addComponents(idadeInput),
-    new ActionRowBuilder().addComponents(racaInput),
-    new ActionRowBuilder().addComponents(familiaInput)
-  );
-
-  return modal;
+      return {
+        name: item,
+        quantity: 1
+      };
+    });
 }
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('criar-personagem')
     .setDescription('Cria uma ficha completa de personagem para um jogador')
+
     .addUserOption((option) =>
       option
         .setName('jogador')
         .setDescription('Jogador que receberá a ficha')
         .setRequired(true)
     )
+
     .addAttachmentOption((option) =>
       option
         .setName('imagem')
         .setDescription('Imagem do personagem')
         .setRequired(false)
+    )
+
+    .addStringOption((option) =>
+      option.setName('nome').setDescription('Nome').setRequired(true).setMaxLength(100)
+    )
+    .addStringOption((option) =>
+      option.setName('sobrenome').setDescription('Sobrenome').setRequired(false).setMaxLength(100)
+    )
+    .addIntegerOption((option) =>
+      option.setName('idade').setDescription('Idade').setRequired(false).setMinValue(0).setMaxValue(999)
+    )
+    .addStringOption((option) =>
+      option.setName('raca').setDescription('Raça').setRequired(false).setMaxLength(100)
+    )
+    .addStringOption((option) =>
+      option.setName('familia').setDescription('Família').setRequired(false).setMaxLength(100)
+    )
+    .addStringOption((option) =>
+      option.setName('cla').setDescription('Clã').setRequired(false).setMaxLength(100)
+    )
+    .addStringOption((option) =>
+      option.setName('genero').setDescription('Gênero').setRequired(false).setMaxLength(100)
+    )
+    .addStringOption((option) =>
+      option.setName('classe').setDescription('Classe').setRequired(false).setMaxLength(100)
+    )
+    .addStringOption((option) =>
+      option.setName('rank').setDescription('Rank').setRequired(false).setMaxLength(100)
+    )
+    .addStringOption((option) =>
+      option.setName('origem').setDescription('Origem').setRequired(false).setMaxLength(1000)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('personalidade')
+        .setDescription('Personalidade')
+        .setRequired(false)
+        .setMaxLength(1000)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('historia')
+        .setDescription('História')
+        .setRequired(false)
+        .setMaxLength(4000)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('habilidades')
+        .setDescription('Habilidades')
+        .setRequired(false)
+        .setMaxLength(2000)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('aparencia')
+        .setDescription('Aparência em texto')
+        .setRequired(false)
+        .setMaxLength(1000)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('inventario')
+        .setDescription('Inventário inicial. Ex: Katana, 3 Poções, 2 Kunais')
+        .setRequired(false)
+        .setMaxLength(1000)
     ),
 
   async execute(interaction, context) {
@@ -104,17 +140,52 @@ module.exports = {
       });
     }
 
-    const sessionId = crypto.randomUUID();
+    const nome = interaction.options.getString('nome', true).trim();
+    const sobrenome = interaction.options.getString('sobrenome')?.trim() || '';
+    const idade = interaction.options.getInteger('idade');
+    const raca = interaction.options.getString('raca')?.trim() || '';
+    const familia = interaction.options.getString('familia')?.trim() || '';
+    const cla = interaction.options.getString('cla')?.trim() || '';
+    const genero = interaction.options.getString('genero')?.trim() || '';
+    const classe = interaction.options.getString('classe')?.trim() || '';
+    const rank = interaction.options.getString('rank')?.trim() || '';
+    const origem = interaction.options.getString('origem')?.trim() || '';
+    const personalidade = interaction.options.getString('personalidade')?.trim() || '';
+    const historia = interaction.options.getString('historia')?.trim() || '';
+    const habilidades = interaction.options.getString('habilidades')?.trim() || '';
+    const aparencia = interaction.options.getString('aparencia')?.trim() || '';
+    const inventarioRaw = interaction.options.getString('inventario')?.trim() || '';
 
-    interaction.client.rpgCreateSessions.set(sessionId, {
+    const inventario = parseInventory(inventarioRaw);
+
+    const character = storage.createCharacter({
       guildId: interaction.guildId,
       playerId: targetUser.id,
       createdBy: interaction.user.id,
-      imageUrl: image?.url || '',
-      createdAt: Date.now(),
-      data: {}
+      nome,
+      sobrenome,
+      idade,
+      raca,
+      familia,
+      cla,
+      genero,
+      classe,
+      rank,
+      origem,
+      aparencia,
+      personalidade,
+      historia,
+      habilidades,
+      inventario,
+      imageUrl: image?.url || ''
     });
 
-    return interaction.showModal(buildStep1Modal(sessionId));
+    const embed = buildCharacterEmbed(character, targetUser, 1, 1);
+
+    return interaction.reply({
+      content: `✅ Personagem criado com sucesso para ${targetUser}.`,
+      embeds: [embed],
+      ephemeral: true
+    });
   }
 };
