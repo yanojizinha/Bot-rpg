@@ -12,11 +12,9 @@ const TEXT_FIELDS = {
   classe: 'classe',
   rank: 'rank',
   origem: 'origem',
-  aparencia: 'aparencia',
   personalidade: 'personalidade',
   historia: 'historia',
-  habilidades: 'habilidades',
-  inventario: 'inventario'
+  habilidades: 'habilidades'
 };
 
 module.exports = {
@@ -26,13 +24,13 @@ module.exports = {
     .addIntegerOption((option) =>
       option
         .setName('id')
-        .setDescription('ID da ficha do personagem')
+        .setDescription('ID da ficha')
         .setRequired(true)
     )
     .addStringOption((option) =>
       option
         .setName('campo')
-        .setDescription('Campo que será alterado')
+        .setDescription('Campo que será editado')
         .setRequired(true)
         .addChoices(
           { name: 'nome', value: 'nome' },
@@ -45,18 +43,17 @@ module.exports = {
           { name: 'classe', value: 'classe' },
           { name: 'rank', value: 'rank' },
           { name: 'origem', value: 'origem' },
-          { name: 'aparência', value: 'aparencia' },
           { name: 'personalidade', value: 'personalidade' },
           { name: 'história', value: 'historia' },
           { name: 'habilidades', value: 'habilidades' },
-          { name: 'inventário', value: 'inventario' },
+          { name: 'aparência', value: 'aparencia' },
           { name: 'imagem', value: 'imagem' }
         )
     )
     .addStringOption((option) =>
       option
         .setName('valor')
-        .setDescription('Novo valor do campo')
+        .setDescription('Novo valor para o campo')
         .setRequired(false)
         .setMaxLength(1900)
     )
@@ -86,7 +83,7 @@ module.exports = {
 
     if (!character) {
       return interaction.reply({
-        content: `❌ Não encontrei nenhuma ficha com ID #${id} neste servidor.`,
+        content: `❌ Não encontrei nenhuma ficha com ID **#${id}** neste servidor.`,
         ephemeral: true
       });
     }
@@ -96,7 +93,7 @@ module.exports = {
     if (field === 'idade') {
       if (!value) {
         return interaction.reply({
-          content: '❌ Para editar a idade, envie um valor numérico em `valor`.',
+          content: '❌ Para editar a idade, envie um número em `valor`.',
           ephemeral: true
         });
       }
@@ -115,24 +112,33 @@ module.exports = {
       if (image) {
         if (image.contentType && !image.contentType.startsWith('image/')) {
           return interaction.reply({
-            content: '❌ O anexo precisa ser uma imagem válida.',
+            content: '❌ O anexo enviado precisa ser uma imagem válida.',
             ephemeral: true
           });
         }
 
         patch.imageUrl = image.url;
       } else if (value && /^https?:\/\//i.test(value)) {
-        patch.imageUrl = value;
+        patch.imageUrl = value.trim();
       } else {
         return interaction.reply({
-          content: '❌ Para o campo imagem, envie um anexo em `imagem` ou uma URL em `valor`.',
+          content: '❌ Para editar a imagem, envie um anexo em `imagem` ou uma URL em `valor`.',
           ephemeral: true
         });
       }
-    } else if (TEXT_FIELDS[field]) {
-      if (typeof value !== 'string') {
+    } else if (field === 'aparencia') {
+      if (!value?.trim()) {
         return interaction.reply({
-          content: '❌ Esse campo precisa receber um valor em texto.',
+          content: '❌ Esse campo precisa de um valor em texto.',
+          ephemeral: true
+        });
+      }
+
+      patch.aparencia = value.trim();
+    } else if (TEXT_FIELDS[field]) {
+      if (!value?.trim()) {
+        return interaction.reply({
+          content: '❌ Esse campo precisa de um valor em texto.',
           ephemeral: true
         });
       }
@@ -146,10 +152,18 @@ module.exports = {
     }
 
     const updated = storage.updateCharacter(interaction.guildId, id, patch);
+
+    if (!updated) {
+      return interaction.reply({
+        content: '❌ Não consegui atualizar essa ficha.',
+        ephemeral: true
+      });
+    }
+
     const user = await interaction.client.users.fetch(updated.playerId);
 
     return interaction.reply({
-      content: `✅ Ficha #${updated.id} atualizada com sucesso.`,
+      content: `✅ A ficha **#${updated.id}** foi atualizada com sucesso.`,
       embeds: [buildCharacterEmbed(updated, user, 1, 1)],
       ephemeral: true
     });
