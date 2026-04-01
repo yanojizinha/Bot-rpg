@@ -13,8 +13,26 @@ function clip(text, max = 1024) {
   return `${value.slice(0, max - 3)}...`;
 }
 
+function formatInventory(inventory) {
+  if (!Array.isArray(inventory) || inventory.length === 0) {
+    return 'Vazio';
+  }
+
+  const content = inventory
+    .map((item) => `• ${item.name} x${item.quantity}`)
+    .join('\n');
+
+  if (content.length <= 1024) {
+    return content;
+  }
+
+  return `${content.slice(0, 1021)}...`;
+}
+
 function buildCharacterEmbed(character, user, total = 1, index = 1) {
-  const fullName = [character.nome, character.sobrenome].filter(Boolean).join(' ').trim() || 'Sem nome';
+  const fullName =
+    [character.nome, character.sobrenome].filter(Boolean).join(' ').trim() ||
+    'Sem nome';
 
   const embed = new EmbedBuilder()
     .setTitle(`Ficha de ${fullName}`)
@@ -67,7 +85,9 @@ function buildCharacterEmbed(character, user, total = 1, index = 1) {
       },
       {
         name: 'Aparência',
-        value: clip(character.aparencia),
+        value: character.imageUrl
+          ? 'Definida pela imagem da ficha.'
+          : clip(character.aparencia),
         inline: false
       },
       {
@@ -87,7 +107,7 @@ function buildCharacterEmbed(character, user, total = 1, index = 1) {
       },
       {
         name: 'Inventário',
-        value: clip(character.inventario),
+        value: formatInventory(character.inventario),
         inline: false
       }
     )
