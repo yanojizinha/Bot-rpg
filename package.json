@@ -1,0 +1,20 @@
+{
+  "name": "discord-rpg-bot",
+  "version": "1.0.0",
+  "description": "Bot de RPG para Discord com criação de personagens, ficha com imagem e controle de admins.",
+  "main": "index.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "deploy": "node deploy-commands.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.25.1",
+    "dotenv": "^16.6.1",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  }
+}
